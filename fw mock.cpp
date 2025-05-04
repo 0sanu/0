@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 
-#define N 999  // Indicates no direct edge between vertices
+#define INF 999  // Indicates no direct edge
 
 class Graph {
 private:
@@ -11,48 +11,41 @@ private:
 public:
     Graph() {
         vertexcount = 0;
+        for (int i = 0; i < 20; i++)
+            for (int j = 0; j < 20; j++)
+                matrix[i][j] = INF;
     }
 
-    void input();             // Input vertices and edges
-    void displaymatrix();     // Display adjacency matrix
-    void warshalls();         // Run Floyd-Warshall algorithm
+    void input();
+    void displaymatrix();
+    void warshalls();
 };
 
-// Combined input of vertices and edges
+// Input function: Add vertices and edges with weights
 void Graph::input() {
-    int edges;
-    cout << "\nEnter the number of vertices: ";
+    int edges, a, b, weight;
+    cout << "Enter number of vertices: ";
     cin >> vertexcount;
 
-    // Initialize matrix
-    for (int i = 0; i < vertexcount; i++) {
-        for (int j = 0; j < vertexcount; j++) {
-            if (i == j)
-                matrix[i][j] = 0;
-            else
-                matrix[i][j] = N;
-        }
-    }
-
-    cout << "\nEnter the number of edges: ";
+    cout << "Enter number of edges: ";
     cin >> edges;
 
     for (int i = 0; i < edges; i++) {
-        int a, b, cost;
-        cout << "\nEnter edge " << i + 1 << " (source destination weight): ";
-        cin >> a >> b >> cost;
+        cout << "Enter two vertices (0 to " << vertexcount - 1 << "): ";
+        cin >> a >> b;
+        cout << "Enter weight of the edge: ";
+        cin >> weight;
 
         if (a >= 0 && a < vertexcount && b >= 0 && b < vertexcount) {
-            matrix[a][b] = cost;
+            matrix[a][b] = weight;
         } else {
-            cout << "!! Invalid vertices. Try again !!\n";
-            i--; // Retry same edge
+            cout << "Invalid edge. Try again.\n";
+            i--;  // Retry the same edge
         }
     }
-
-    cout << "\n!! Graph input complete !!\n";
 }
 
+// Display the adjacency matrix
 void Graph::displaymatrix() {
     if (vertexcount == 0) {
         cout << "\n!! Add the vertices first !!\n";
@@ -60,68 +53,75 @@ void Graph::displaymatrix() {
     }
 
     cout << "\nAdjacency Matrix:\n   ";
-    for (int i = 0; i < vertexcount; i++) {
-        cout << i << "  ";
-    }
+    for (int i = 0; i < vertexcount; i++)
+        cout << i << "\t";
     cout << "\n";
 
     for (int i = 0; i < vertexcount; i++) {
         cout << i << "  ";
         for (int j = 0; j < vertexcount; j++) {
-            if (matrix[i][j] == N)
-                cout << "N  ";
+            if (matrix[i][j] == INF)
+                cout << "0\t";
             else
-                cout << matrix[i][j] << "  ";
+                cout << matrix[i][j] << "\t";
         }
         cout << "\n";
     }
 }
 
+// Run Floyd-Warshall algorithm
 void Graph::warshalls() {
     if (vertexcount == 0) {
         cout << "\n!! Add the vertices first !!\n";
         return;
     }
 
-    // Floyd-Warshall in-place
+    int dist[20][20];
+
+    // Initialize distance matrix
+    for (int i = 0; i < vertexcount; i++) {
+        for (int j = 0; j < vertexcount; j++) {
+            dist[i][j] = matrix[i][j];
+            if (i == j) dist[i][j] = 0;
+        }
+    }
+
+    // Floyd-Warshall algorithm
     for (int k = 0; k < vertexcount; k++) {
         for (int i = 0; i < vertexcount; i++) {
             for (int j = 0; j < vertexcount; j++) {
-                if (matrix[i][k] != N && matrix[k][j] != N &&
-                    matrix[i][k] + matrix[k][j] < matrix[i][j]) {
-                    matrix[i][j] = matrix[i][k] + matrix[k][j];
-                }
+                if (dist[i][k] + dist[k][j] < dist[i][j])
+                    dist[i][j] = dist[i][k] + dist[k][j];
             }
         }
     }
 
-    // Display result
+    // Display shortest path matrix
     cout << "\nShortest Path Matrix:\n   ";
-    for (int i = 0; i < vertexcount; i++) {
-        cout << i << "  ";
-    }
+    for (int i = 0; i < vertexcount; i++)
+        cout << i << "\t";
     cout << "\n";
 
     for (int i = 0; i < vertexcount; i++) {
         cout << i << "  ";
         for (int j = 0; j < vertexcount; j++) {
-            if (matrix[i][j] == N)
-                cout << "N  ";
+            if (dist[i][j] == INF)
+                cout << "N\t";
             else
-                cout << matrix[i][j] << "  ";
+                cout << dist[i][j] << "\t";
         }
         cout << "\n";
     }
 
-    // Show pairwise paths
-    cout << "\nShortest paths between all pairs:\n";
+    // Optional: Show shortest path values
+    cout << "\nShortest distances between all pairs:\n";
     for (int i = 0; i < vertexcount; i++) {
         for (int j = 0; j < vertexcount; j++) {
-            cout << "From " << i << " to " << j << ": ";
-            if (matrix[i][j] == N)
+            cout << "From " << i << " to " << j << " : ";
+            if (dist[i][j] == INF)
                 cout << "Not reachable\n";
             else
-                cout << matrix[i][j] << "\n";
+                cout << dist[i][j] << "\n";
         }
     }
 }
@@ -132,7 +132,7 @@ int main() {
 
     do {
         cout << "\n*************** MENU ***************\n";
-        cout << "1. Input Graph (Vertices and Edges)\n";
+        cout << "1. Add Vertices and Edges\n";
         cout << "2. Display Adjacency Matrix\n";
         cout << "3. Run Floyd-Warshall Algorithm\n";
         cout << "4. Exit\n";
@@ -143,8 +143,8 @@ int main() {
             case 1: obj.input(); break;
             case 2: obj.displaymatrix(); break;
             case 3: obj.warshalls(); break;
-            case 4: cout << "\n!! THANK YOU !!\n"; break;
-            default: cout << "\n!! INVALID CHOICE !!\n";
+            case 4: cout << "!! THANK YOU !!\n"; break;
+            default: cout << "Invalid choice! Try again.\n";
         }
     } while (ch != 4);
 
